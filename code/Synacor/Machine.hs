@@ -8,19 +8,19 @@ import qualified Data.Map as M
 
 data CurrentState = 
     CurrentState {
-        registers :: [Int],
+        regs :: [Int],
         stack :: [Int],
         memory :: [Int]
     }
 
 writeRegister :: CurrentState -> Int -> Int -> Maybe CurrentState
 writeRegister (CurrentState rs _ _) r v = let
-    reg = n - maxAddress
-    rs' = (take reg )
+    reg = r - maxAddress
+    in Nothing
 
 readRegister :: CurrentState -> Int -> Maybe Int
-readRegister (CurrentState rs _ _) n = let
-    reg = n - maxAddress
+readRegister (CurrentState rs _ _) n = 
+    let reg = n - maxAddress
     in if reg >= 0 && reg < 8 then Just (rs !! n) else Nothing
 
 maxAddress = 32767
