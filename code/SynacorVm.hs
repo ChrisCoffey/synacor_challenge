@@ -6,13 +6,15 @@ import Data.Binary.Get
 import Data.Word
 import Data.Monoid
 
-deserializeInst :: Get [Word16]
-deserializeInst = do
+import Synacor.Parser
+
+toInstructions :: Get [Word16]
+toInstructions = do
     empty <- isEmpty
     if empty
         then return []
         else do v <- getWord16le
-                rest <- deserializeInst
+                rest <- toInstructions
                 return (v:rest)
 
 joinWords :: [Word16] -> Builder
@@ -23,5 +25,4 @@ joinWords (w:ws) =
 main :: IO ()
 main = do 
     contents <- LB.getContents
-    --print $ runGet (toLazyByteString . joinWords . deserializeInst) contents
-    print $ runGet deserializeInst contents
+    print $ runGet (fmap parseOpcodes toInstructions) contents

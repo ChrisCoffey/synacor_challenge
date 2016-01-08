@@ -2,51 +2,41 @@
 
 module Synacor.Machine where
 
-import System.Exit
 import Data.Maybe
-import qualified Data.Map as M
+import Data.Word
 
 data CurrentState = 
     CurrentState {
-        regs :: [Int],
-        stack :: [Int],
-        memory :: [Int]
+        regs :: [Word16],
+        stack :: [Word16],
+        memory :: [Word16]
     }
-
-writeRegister :: CurrentState -> Int -> Int -> Maybe CurrentState
-writeRegister (CurrentState rs _ _) r v = let
-    reg = r - maxAddress
-    in Nothing
-
-readRegister :: CurrentState -> Int -> Maybe Int
-readRegister (CurrentState rs _ _) n = 
-    let reg = n - maxAddress
-    in if reg >= 0 && reg < 8 then Just (rs !! n) else Nothing
 
 maxAddress = 32767
 registers = map (+ maxAddress) [1..8]
 
 data Opcode = 
-    Halt |
-    Set Int Int |
-    Push Int |
-    Pop Int |
-    Equ Int |
-    Gt Int |
-    Jmp Int |
-    Jt Int Int |
-    Jf Int Int |
-    Add Int Int Int |
-    Mult Int Int Int |
-    Mod Int Int Int |
-    And Int Int Int |
-    Or Int Int Int |
-    Not Int Int |
-    RMem Int Int |
-    WMem Int Int |
-    Call Int |
-    Ret Int |
-    Out Int |
-    In Int |
-    NoOp
-
+    Halt |                       --0
+    Set Word16 Word16 |          --1
+    Push Word16 |                --2
+    Pop Word16 |                 --3
+    Equ Word16 Word16 Word16 |   --4
+    Gt Word16 Word16 Word16 |    --5
+    Jmp Word16 |                 --6
+    Jt Word16 Word16 |           --7
+    Jf Word16 Word16 |           --8
+    Add Word16 Word16 Word16 |   --9
+    Mult Word16 Word16 Word16 |  --10
+    Mod Word16 Word16 Word16 |   --11
+    And Word16 Word16 Word16 |   --12
+    Or Word16 Word16 Word16 |    --13
+    Not Word16 Word16 |          --14
+    RMem Word16 Word16 |         --15
+    WMem Word16 Word16 |         --16
+    Call Word16 |                --17
+    Ret Word16 |                 --18
+    Out Word16 |                 --19
+    In Word16 |                  --20
+    NoOp|                        --21
+    Unimplemented
+    deriving (Show)
