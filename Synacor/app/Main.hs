@@ -27,22 +27,26 @@ joinWords [] = mempty
 joinWords (w:ws) =
     (word16LE w) <> mconcat [word16LE w' | w' <- ws]
 
-processInstructions :: CurrentState -> Instructions -> IO CurrentState
-processInstructions s is = f s is where
-    f (CurrentState i _ _ _) is = let
+processInstructions :: Instructions -> CurrentState -> IO CurrentState
+processInstructions is s = f s is where
+    f (CurrentState i _ _ _) is
+        | i > 10000000 = do {return s}
+        | otherwise =  let
         code = (M.! i) is
         (m, newState) = interpret s code
         in clean m newState where
-            clean Nothing ns = return ns
+            clean Nothing ns = processInstructions is ns
             clean (Just Exit) ns = do { die "all done" }
             clean (Just (Term c)) ns = do 
                 x <- putChar $ chr . fromIntegral . toInteger $ c 
-                return ns
+                next <- processInstructions is ns
+                return next 
 
 main :: IO ()
 main = do 
     contents <- LB.getContents
     let codes = runGet (fmap parseOpcodes toInstructions) contents
         instructions = M.fromList . zip [1..] $ codes
-        res = processInstructions instructions
+        initialMachine = CurrentState {inst = 1, regs = [], stack = [], memory = []}
+    res <-  processInstructions instructions initialMachine
     print res

@@ -13,6 +13,7 @@ data CurrentState =
         stack :: [Word16],
         memory :: [Word16]
     }
+    deriving (Show, Eq)
 
 maxAddress = 32767
 registers = map (+ maxAddress) [1..8]
