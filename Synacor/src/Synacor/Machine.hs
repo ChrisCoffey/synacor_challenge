@@ -4,9 +4,11 @@ module Synacor.Machine where
 
 import Data.Maybe
 import Data.Word
+import qualified Data.Map as M
 
 data CurrentState = 
     CurrentState {
+        inst :: Int,
         regs :: [Word16],
         stack :: [Word16],
         memory :: [Word16]
@@ -14,6 +16,13 @@ data CurrentState =
 
 maxAddress = 32767
 registers = map (+ maxAddress) [1..8]
+
+data Output = 
+    Term Word16 |
+    Exit |
+    Error String
+
+type Instructions = M.Map Int Opcode
 
 data Opcode = 
     Halt |                       --0

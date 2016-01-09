@@ -2,3 +2,5 @@
 *.orig
 *.hi
 *.o
+Synacor/.stack-work/*
+.stack-work/*
