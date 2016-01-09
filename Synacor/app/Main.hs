@@ -48,5 +48,6 @@ main = do
     let codes = runGet (fmap parseOpcodes toInstructions) contents
         instructions = M.fromList . zip [1..] $ codes
         initialMachine = CurrentState {inst = 1, regs = [], stack = [], memory = []}
+    x <- print codes
     res <-  processInstructions instructions initialMachine
     print res
