@@ -6,24 +6,31 @@ import Data.Maybe
 import Data.Word
 import qualified Data.Map as M
 
+type Instructions = M.Map Int Opcode
+type Registers = M.Map Word16 Word16
+type Memory = M.Map Word16 Word16
+
 data CurrentState = 
     CurrentState {
         inst :: Int,
-        regs :: [Word16],
+        regs :: Registers,
         stack :: [Word16],
-        memory :: [Word16]
+        memory :: Memory
     }
     deriving (Show, Eq)
 
-maxAddress = 32767
-registers = map (+ maxAddress) [1..8]
 
 data Output = 
     Term Word16 |
     Exit |
     Error String
 
-type Instructions = M.Map Int Opcode
+
+maxAddress = 32767 :: Word16
+registers :: Registers
+registers = M.fromList $ map (\x-> ((x :: Word16) + maxAddress, 0 :: Word16)) [1..8]
+mainMemory :: Memory
+mainMemory = M.fromList $ map (\x-> ( (x :: Word16), 0 :: Word16) ) [0..32767]
 
 data Opcode = 
     Halt |                       --0
@@ -44,9 +51,9 @@ data Opcode =
     RMem Word16 Word16 |         --15
     WMem Word16 Word16 |         --16
     Call Word16 |                --17
-    Ret Word16 |                 --18
+    Ret |                        --18
     Out Word16 |                 --19
     In Word16 |                  --20
     NoOp|                        --21
-    Unimplemented
+    Unimplemented Word16         -- ???
     deriving (Show)

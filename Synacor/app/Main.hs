@@ -36,7 +36,9 @@ processInstructions is s = f s is where
         (m, newState) = interpret s code
         in clean m newState where
             clean Nothing ns = processInstructions is ns
-            clean (Just Exit) ns = do { die "all done" }
+            clean (Just Exit) ns = do  
+                _ <- print ns
+                die "all done" 
             clean (Just (Term c)) ns = do 
                 x <- putChar $ chr . fromIntegral . toInteger $ c 
                 next <- processInstructions is ns
@@ -46,8 +48,8 @@ main :: IO ()
 main = do 
     contents <- LB.getContents
     let codes = runGet (fmap parseOpcodes toInstructions) contents
-        instructions = M.fromList . zip [1..] $ codes
-        initialMachine = CurrentState {inst = 1, regs = [], stack = [], memory = []}
-    x <- print codes
+        instructions = M.fromList . zip [0..] $ codes
+        initialMachine = CurrentState {inst = 0, regs = registers, stack = [], memory = mainMemory}
+    _ <- mapM_ (putStrLn . show) $ M.toList instructions
     res <-  processInstructions instructions initialMachine
     print res
