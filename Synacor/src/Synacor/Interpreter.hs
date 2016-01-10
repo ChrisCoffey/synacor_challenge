@@ -8,43 +8,26 @@ import Data.Maybe
 import Data.Word
 
 import Synacor.Machine
+import Synacor.Parser
 
 asInt w = fromInteger . toInteger $ w
 
-interpret :: CurrentState -> Opcode -> (Maybe Output, CurrentState)
-interpret state Halt = (Just Exit, state)
-interpret (CurrentState i r s m) NoOp = let
-    nm = CurrentState { inst = i + 1, regs = r, stack = s, memory = m }
-    in (Nothing, nm)
-interpret (CurrentState i r s m) (Out c)= let
-    nm = CurrentState { inst = i + 1, regs = r, stack = s, memory = m }
-    t = Term c
-    in (Just t, nm)
-interpret (CurrentState i r s m) (Jmp a) = let
-    nm = CurrentState { inst = asInt a, regs = r, stack = s, memory = m }
-    t = Term (37 :: Word16)
-    in (Just t , nm)
-interpret cs@(CurrentState i r s m) (Jf reg targ) = let
-    v = (M.! reg) r
-    ns = CurrentState { inst = asInt targ, regs = r, stack = s, memory = m }
-    t = Term (38 :: Word16)
-    in (Just t, if v == 0 then ns else cs)
-interpret cs@(CurrentState i r s m) (Jt reg targ) = let
-    v = (M.! reg) r
-    ns = CurrentState { inst = asInt targ, regs = r, stack = s, memory = m }
-    t = Term (38 :: Word16)
-    in (Just t, if v == 0 then cs else ns)
-interpret (CurrentState i r s m) (Set reg val) = let
-    nm = CurrentState {inst = i + 1, regs = M.insert reg val r, stack = s, memory = m }
-    in (Nothing, nm)
-interpret (CurrentState i r s m) (Call rx) = let
-    targ = (M.! rx) r
-    nm = CurrentState {inst = asInt targ, regs = r, stack = (fromIntegral (i + 1)):s, memory = m }
-    in (Nothing, nm)
-interpret cs@(CurrentState i r s m) Ret = let 
-    nm = CurrentState {inst = asInt $ head s, regs = r, stack = tail s, memory = m}
-    res = if L.null s then (Just Exit, cs) else (Nothing, nm)
-    in res
-interpret (CurrentState i r s m) _ = let
-    nm = CurrentState { inst = i + 1, regs = r, stack = s, memory = m }
-    in (Just Exit, nm)
+writeTo :: Word16 ->  Word16 -> [Word16] -> [Word16]
+writeTo i v ls = concat [(take (asInt i) ls), [v], (drop ((asInt i) + 1) ls)]
+
+readFrom :: Word16 -> [Word16] -> Word16
+readFrom i ls = ls !! (asInt i)
+
+interpret :: CurrentState -> (Maybe Output, CurrentState)
+interpret machine@(CurrentState idx stk mem) = let
+    (opcode, length) = parseOpcode . (drop (asInt idx)) $ mem
+    nextOp = idx + (fromIntegral length)
+    handle = f where
+        f Halt = (Just Exit, machine)
+        f (Set a b) = let
+            valB = readFrom b mem
+            newMem = writeTo a valB mem
+            in (Nothing, CurrentState {inst = nextOp, stack = stk, memory = newMem} ) 
+        f (Out c) =  (Just (Term c), CurrentState {inst = nextOp, stack = stk, memory = mem} )
+        f NoOp = (Nothing, machine)
+    in handle opcode

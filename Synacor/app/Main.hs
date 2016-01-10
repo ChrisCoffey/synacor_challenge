@@ -27,29 +27,29 @@ joinWords [] = mempty
 joinWords (w:ws) =
     (word16LE w) <> mconcat [word16LE w' | w' <- ws]
 
-processInstructions :: Instructions -> CurrentState -> IO CurrentState
-processInstructions is s = f s is where
-    f (CurrentState i _ _ _) is
-        | i > 10000000 = do {return s}
+processInstructions :: CurrentState -> IO CurrentState
+processInstructions machine = f machine where
+    f (CurrentState i _ _) 
+        | i > 1000 = do {return machine}
         | otherwise =  let
-        code = (M.! i) is
-        (m, newState) = interpret s code
+        (m, newState) = interpret machine
         in clean m newState where
-            clean Nothing ns = processInstructions is ns
+            clean Nothing ns = processInstructions ns
             clean (Just Exit) ns = do  
                 _ <- print ns
                 die "all done" 
             clean (Just (Term c)) ns = do 
                 x <- putChar $ chr . fromIntegral . toInteger $ c 
-                next <- processInstructions is ns
+                next <- processInstructions ns
                 return next 
 
 main :: IO ()
 main = do 
     contents <- LB.getContents
-    let codes = runGet (fmap parseOpcodes toInstructions) contents
-        instructions = M.fromList . zip [0..] $ codes
-        initialMachine = CurrentState {inst = 0, regs = registers, stack = [], memory = mainMemory}
-    _ <- mapM_ (putStrLn . show) $ M.toList instructions
-    res <-  processInstructions instructions initialMachine
+    let codes = runGet toInstructions contents
+        zeroes = take 20000 . repeat $ 0
+        initialMem = take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
+        initialMachine = CurrentState {inst = 0, stack = [], memory = codes}
+    _ <- print initialMachine
+    res <- processInstructions initialMachine
     print res
