@@ -34,7 +34,9 @@ processInstructions machine = f machine where
         | otherwise =  let
         (m, newState) = interpret machine
         in clean m newState where
-            clean Nothing ns = processInstructions ns
+            clean Nothing ns = do
+                _ <- print $ inst ns
+                processInstructions ns
             clean (Just Exit) ns = do  
                 _ <- print ns
                 die "all done" 
@@ -49,7 +51,7 @@ main = do
     let codes = runGet toInstructions contents
         zeroes = take 20000 . repeat $ 0
         initialMem = take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
-        initialMachine = CurrentState {inst = 0, stack = [], memory = codes}
+        initialMachine = CurrentState {inst = 0, stack = [], memory = initialMem }
     _ <- print initialMachine
     res <- processInstructions initialMachine
     print res

@@ -29,5 +29,6 @@ interpret machine@(CurrentState idx stk mem) = let
             newMem = writeTo a valB mem
             in (Nothing, CurrentState {inst = nextOp, stack = stk, memory = newMem} ) 
         f (Out c) =  (Just (Term c), CurrentState {inst = nextOp, stack = stk, memory = mem} )
-        f NoOp = (Nothing, machine)
+        f NoOp = (Nothing, CurrentState {inst = nextOp, stack = stk, memory = mem} )
+        f x = (Nothing, CurrentState {inst = nextOp, stack = stk, memory = mem} )
     in handle opcode
