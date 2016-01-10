@@ -28,6 +28,7 @@ interpret machine@(CurrentState idx stk mem) = let
             valB = readFrom b mem
             newMem = writeTo a valB mem
             in (Nothing, CurrentState {inst = nextOp, stack = stk, memory = newMem} ) 
+        f (Jmp a) = (Nothing, CurrentState {inst = a, stack = stk, memory = mem} )
         f (Out c) =  (Just (Term c), CurrentState {inst = nextOp, stack = stk, memory = mem} )
         f NoOp = (Nothing, CurrentState {inst = nextOp, stack = stk, memory = mem} )
         f x = (Nothing, CurrentState {inst = nextOp, stack = stk, memory = mem} )

@@ -37,9 +37,7 @@ processInstructions machine = f machine where
             clean Nothing ns = do
                 _ <- print $ inst ns
                 processInstructions ns
-            clean (Just Exit) ns = do  
-                _ <- print ns
-                die "all done" 
+            clean (Just Exit) ns = do { die "all done" }
             clean (Just (Term c)) ns = do 
                 x <- putChar $ chr . fromIntegral . toInteger $ c 
                 next <- processInstructions ns
@@ -52,6 +50,5 @@ main = do
         zeroes = take 20000 . repeat $ 0
         initialMem = take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
         initialMachine = CurrentState {inst = 0, stack = [], memory = initialMem }
-    _ <- print initialMachine
     res <- processInstructions initialMachine
-    print res
+    print "terminated"
