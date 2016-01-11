@@ -37,6 +37,10 @@ processInstructions machine = f machine where
             clean Nothing ns = do
                 _ <- print $ inst ns
                 processInstructions ns
+            clean (Just (Dbg c ls)) ns = do
+                _ <- print c
+                _ <- print ls
+                processInstructions ns
             clean (Just Exit) ns = do { die "all done" }
             clean (Just (Term c)) ns = do 
                 x <- putChar $ chr . fromIntegral . toInteger $ c 

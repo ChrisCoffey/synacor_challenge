@@ -19,6 +19,7 @@ data CurrentState =
 
 data Output = 
     Term Word16 |
+    Dbg Opcode [Word16] |
     Exit |
     Error String
 

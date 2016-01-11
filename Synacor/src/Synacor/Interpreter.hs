@@ -115,10 +115,15 @@ interpret machine@(CurrentState idx stk mem) = let
             in (Nothing,  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
         --15
         f (RMem a b) = let
-            b' = mem !! (asInt b)
+            isReg = maxAddress < b
+            b' = if isReg then mem !! (asInt (readFrom b mem)) else mem !! (asInt b)
+            newMem = writeTo a b' mem
+            in (Just (Dbg (RMem a b) [b']),  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
+        --16
+        f (WMem a b) = let
+            b' = readFrom b mem
             newMem = writeTo a b' mem
             in (Nothing,  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
-        --16
         --17
         f (Call a) = let
             a' = readFrom a mem
