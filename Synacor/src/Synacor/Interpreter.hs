@@ -123,7 +123,7 @@ interpret machine@(CurrentState idx stk mem) = let
         f (WMem a b) = let
             b' = readFrom b mem
             newMem = writeTo a b' mem
-            in (Nothing,  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
+            in (Just (Dbg (WMem a b) [idx,b']),  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
         --17
         f (Call a) = let
             a' = readFrom a mem
