@@ -30,7 +30,7 @@ joinWords (w:ws) =
 processInstructions :: CurrentState -> IO CurrentState
 processInstructions machine = f machine where
     f (CurrentState i _ _) 
-        | i > 1000 = do {return machine}
+        | i > 65535 = do {return machine}
         | otherwise =  let
         (m, newState) = interpret machine
         in clean m newState where
@@ -50,5 +50,6 @@ main = do
         zeroes = take 20000 . repeat $ 0
         initialMem = take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
         initialMachine = CurrentState {inst = 0, stack = [], memory = initialMem }
+    _ <- mapM_ print $ zip [0..] initialMem
     res <- processInstructions initialMachine
     print "terminated"
