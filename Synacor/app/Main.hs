@@ -35,11 +35,11 @@ processInstructions machine = f machine where
         (m, newState) = interpret machine
         in clean m newState where
             clean Nothing ns = do
-                _ <- print $ inst ns
+                --_ <- print $ (inst ns, stack ns, (drop (asInt maxAddress) (memory ns)))
                 processInstructions ns
             clean (Just (Dbg c ls)) ns = do
-                _ <- print c
-                _ <- print ls
+                --_ <- print c
+                --_ <- print ls
                 processInstructions ns
             clean (Just Exit) ns = do { die "all done" }
             clean (Just (Term c)) ns = do 

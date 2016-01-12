@@ -121,9 +121,11 @@ interpret machine@(CurrentState idx stk mem) = let
             in (Just (Dbg (RMem a b) [b']),  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
         --16
         f (WMem a b) = let
+            isReg = maxAddress < a
+            a' = if isReg then readFrom a mem else a
             b' = readFrom b mem
-            newMem = writeTo a b' mem
-            in (Just (Dbg (WMem a b) [idx,b']),  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
+            newMem = writeTo a' b' mem
+            in (Just (Dbg (WMem a b) [idx, b']),  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
         --17
         f (Call a) = let
             a' = readFrom a mem
@@ -135,5 +137,5 @@ interpret machine@(CurrentState idx stk mem) = let
         --21
         f NoOp = (Nothing, CurrentState {inst = nextOp, stack = stk, memory = mem} )
         --unknown
-        f x = (Nothing, CurrentState {inst = nextOp, stack = stk, memory = mem} )
+        f x = (Just Exit, CurrentState {inst = nextOp, stack = stk, memory = mem} )
     in handle opcode
