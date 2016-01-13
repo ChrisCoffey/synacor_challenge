@@ -1,5 +1,6 @@
 module Main where
 
+import Control.Concurrent
 import qualified Data.ByteString.Lazy   as LB
 import qualified Data.Map               as M
 import Data.ByteString.Builder
@@ -7,11 +8,13 @@ import Data.Binary.Get
 import Data.Char                        (chr)
 import Data.Monoid
 import Data.Word
+import System.IO
 import System.Exit                      (die)
 
 import Synacor.Parser
 import Synacor.Machine
 import Synacor.Interpreter
+import Synacor.Debugger
 
 toInstructions :: Get [Word16]
 toInstructions = do
@@ -47,6 +50,15 @@ processInstructions machine = f machine where
                 next <- processInstructions ns
                 return next 
 
+runDebugger :: IO ()
+runDebugger = loop where
+    loop = do
+        _ <- print "Enter a command"
+        s <- getLine
+        if s == "pause"
+            then print 1
+            else loop
+
 main :: IO ()
 main = do 
     contents <- LB.getContents
@@ -55,5 +67,6 @@ main = do
         initialMem = take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
         initialMachine = CurrentState {inst = 0, stack = [], memory = initialMem }
     _ <- mapM_ print $ zip [0..] initialMem
+    forkIO runDebugger
     res <- processInstructions initialMachine
     print "terminated"
