@@ -50,14 +50,6 @@ processInstructions machine = f machine where
                 next <- processInstructions ns
                 return next 
 
-runDebugger :: IO ()
-runDebugger = loop where
-    loop = do
-        _ <- print "Enter a command"
-        s <- getLine
-        if s == "pause"
-            then print 1
-            else loop
 
 main :: IO ()
 main = do 
@@ -67,6 +59,7 @@ main = do
         initialMem = take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
         initialMachine = CurrentState {inst = 0, stack = [], memory = initialMem }
     _ <- mapM_ print $ zip [0..] initialMem
-    forkIO runDebugger
+    mvr <- newEmptyMVar
+    startDebugger mvr
     res <- processInstructions initialMachine
     print "terminated"
