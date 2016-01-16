@@ -5,6 +5,7 @@ import Control.Monad.Fix                    (fix)
 import Control.Concurrent
 import Control.Concurrent.MVar
 import Control.Exception
+import Data.Word
 import Network.Socket
 import System.IO
 
@@ -12,13 +13,28 @@ import Synacor.Machine
 
 data Vm = Vm { semaphor :: MVar CurrentState, machine :: CurrentState }
 type Msg = String
-data Cmd = Pause | Go | Quit
+data Cmd = 
+    Pause 
+    | Go 
+    | Quit
+    | Break Word16
+    | Step
+    | DumpReg 
+    | SetR  Word16 Word16
+    deriving (Show)
 
 parseCmd :: String -> Maybe Cmd
 parseCmd "quit" = Just Quit
 parseCmd "pause" = Just Pause
 parseCmd "go" = Just Go
-parseCmd _ = Nothing
+parseCmd "step" = Just Step
+parseCmd "dumpreg" = Just DumpReg
+parseCmd xs = let
+    ws = words xs
+    in f ws where
+        f ["break", n] = Just $ Break (read n ::Word16)
+        f ["set", r, v] = Just $ SetR (read r :: Word16) (read v :: Word16)
+        f _ = Nothing
 
     -- parse the input and update the mvar if necessary
     -- mvar is used to make the main thread do debugger work
@@ -51,7 +67,10 @@ runDebugger (sock, _) mvr = do
             Nothing -> do
                 hPutStrLn hdl "Invalid Command!"
                 loop
-            Just Quit -> hPutStrLn hdl "Received Quit Command"
+            Just Quit -> do
+                _ <- takeMVar mvr
+                putMVar mvr Quit 
+                hPutStrLn hdl "Received Quit Command"
             Just c -> do
                 _ <- takeMVar mvr
                 putMVar mvr c
