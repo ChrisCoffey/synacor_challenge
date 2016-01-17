@@ -2,12 +2,11 @@
 
 module Synacor.Machine where
 
-import Data.Maybe
 import Data.Word
 import qualified Data.Map as M
 
 type MStack = [Word16]
-type Memory = [Word16]
+type Memory = M.Map Word16 Word16
 
 data CurrentState = 
     CurrentState {
@@ -23,7 +22,9 @@ data Output =
     Exit |
     Error String
 
+maxAddress :: Word16
 maxAddress = 32767 :: Word16
+registerMax :: Word16
 registerMax = maxAddress + 8
 
 isLiteral :: Word16 -> Bool

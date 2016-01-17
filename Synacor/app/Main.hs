@@ -42,6 +42,7 @@ processInstructions machine mvar = f machine where
                 c <- takeMVar mvar
                 --print c
                 --print $ (inst ns, stack ns, (drop (asInt (1 + maxAddress)) (memory ns)))
+                print $ inst ns
                 case c of Go        -> do 
                                         _ <- putMVar mvar c
                                         next <-  processInstructions ns mvar
@@ -56,18 +57,17 @@ processInstructions machine mvar = f machine where
                                         threadDelay (10^6 * 5)
                                         next <- processInstructions ns mvar
                                         return next
-                          (SetR r i) -> do
+                          (SetR r v) -> do
                                         _ <- putMVar mvar Pause
                                         let tweaked = CurrentState {
-                                            inst = i,
+                                            inst = v,
                                             stack = st,
-                                            memory = concat [(take (asInt r) mm), [i], (drop ((asInt i) + 1) mm)]
+                                            memory = writeTo r v (memory machine)
                                         }
                                         processInstructions tweaked mvar
-                          (Break i)  -> if inst ns == i
+                          (Break i')  -> if i' == i
                                             then do
                                                 _ <- putMVar mvar Pause
-                                                print . drop (asInt (maxAddress + 1)) . memory $ machine
                                                 next <- processInstructions machine mvar
                                                 return next
                                             else do
@@ -92,9 +92,9 @@ main = do
     contents <- LB.getContents
     let codes = runGet toInstructions contents
         zeroes = take 20000 . repeat $ 0
-        initialMem = take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
+        initialMem = M.fromList . zip [0..] . take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
         initialMachine = CurrentState {inst = 0, stack = [], memory = initialMem }
-    _ <- mapM_ print $ zip [0..] initialMem
+    print initialMachine
     mvr <- newEmptyMVar
     putMVar mvr Pause
     startDebugger mvr

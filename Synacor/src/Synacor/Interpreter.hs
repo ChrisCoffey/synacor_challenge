@@ -13,17 +13,18 @@ import Synacor.Parser
 
 asInt w = fromInteger . toInteger $ w
 
-writeTo :: Word16 ->  Word16 -> [Word16] -> [Word16]
-writeTo i v ls = concat [(take (asInt i) ls), [v], (drop ((asInt i) + 1) ls)]
+writeTo :: Word16 -> Word16 -> Memory -> Memory
+writeTo k v mem = M.insert k v mem
 
-readFrom :: Word16 -> [Word16] -> Word16
-readFrom i ls 
+readFrom :: Word16 -> Memory -> Word16
+readFrom i mem 
     | i <= maxAddress = i
-    | otherwise =  ls !! (asInt i)
+    | otherwise =  (M.! asInt i) mem
 
 interpret :: CurrentState -> (Maybe Output, CurrentState)
 interpret machine@(CurrentState idx stk mem) = let
-    (opcode, length) = parseOpcode . (drop (asInt idx)) $ mem
+    memList = map snd . M.toList $ mem
+    (opcode, length) = parseOpcode . (drop (asInt idx)) $ memList
     nextOp = idx + (fromIntegral length)
     handle = f where
         --0
@@ -116,7 +117,7 @@ interpret machine@(CurrentState idx stk mem) = let
         --15
         f (RMem a b) = let
             isReg = maxAddress < b
-            b' = if isReg then mem !! (asInt (readFrom b mem)) else mem !! (asInt b)
+            b' = if isReg then (M.! (asInt (readFrom b mem))) mem else (M.! (asInt b)) mem 
             newMem = writeTo a b' mem
             in (Nothing,  CurrentState {inst = nextOp, stack = stk, memory = newMem} )
         --16
