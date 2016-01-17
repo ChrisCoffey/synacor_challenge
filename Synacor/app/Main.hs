@@ -2,11 +2,12 @@ module Main where
 
 import Control.Concurrent
 import Control.Concurrent.MVar
+import Control.Monad
 import qualified Data.ByteString.Lazy   as LB
 import qualified Data.Map               as M
 import Data.ByteString.Builder
 import Data.Binary.Get
-import Data.Char                        (chr)
+import Data.Char                        (chr, ord)
 import Data.Monoid
 import Data.Word
 import System.IO
@@ -41,8 +42,7 @@ processInstructions machine mvar = f machine where
             clean Nothing ns = do
                 c <- takeMVar mvar
                 --print c
-                --print $ (inst ns, stack ns, (drop (asInt (1 + maxAddress)) (memory ns)))
-                print $ inst ns
+                --print $ inst ns
                 case c of Go        -> do 
                                         _ <- putMVar mvar c
                                         next <-  processInstructions ns mvar
@@ -56,6 +56,7 @@ processInstructions machine mvar = f machine where
                                         _ <- putMVar mvar Step
                                         threadDelay (10^6 * 5)
                                         next <- processInstructions ns mvar
+                                        print . map (\i-> (memory next) M.! i) $ registers
                                         return next
                           (SetR r v) -> do
                                         _ <- putMVar mvar Pause
@@ -71,32 +72,41 @@ processInstructions machine mvar = f machine where
                                                 next <- processInstructions machine mvar
                                                 return next
                                             else do
-                                                _ <- putMVar mvar Go
+                                                _ <- putMVar mvar (Break i')
                                                 next <- processInstructions ns mvar
                                                 return next
                           Quit       -> do { die "Received quit command"}
                 
             clean (Just (Dbg c ls)) ns = do
-                --_ <- print c
-                --_ <- print ls
                 processInstructions ns mvar
-            clean (Just Exit) ns = do  
+            clean (Just Exit) ns = do
                 die "all done" 
-            clean (Just (Term c)) ns = do 
-                x <- putChar $ chr . fromIntegral . toInteger $ c 
+            clean (Just (TermIn addr)) ns = do
+                
+                let h = ord . head $ res
+                    input = CurrentState {
+                        inst = inst ns,
+                        stack = stack ns,
+                        memory = writeTo addr (asInt h) (memory ns)
+                    }
+                putMVar mvar c
+                next <- processInstructions input mvar
+                return next
+            clean (Just (Term c)) ns = do
+                x <- putChar . chr . fromIntegral . toInteger $ c 
                 next <- processInstructions ns mvar
                 return next 
 
 main :: IO ()
 main = do 
-    contents <- LB.getContents
+    contents <- LB.readFile "challenge.bin"
+    hSetBuffering stdout NoBuffering
     let codes = runGet toInstructions contents
         zeroes = take 20000 . repeat $ 0
         initialMem = M.fromList . zip [0..] . take ((asInt registerMax) + 1) . concat $ [codes, zeroes]
         initialMachine = CurrentState {inst = 0, stack = [], memory = initialMem }
-    print initialMachine
     mvr <- newEmptyMVar
-    putMVar mvr Pause
+    putMVar mvr Go
     startDebugger mvr
     res <- processInstructions initialMachine mvr
     print "terminated"

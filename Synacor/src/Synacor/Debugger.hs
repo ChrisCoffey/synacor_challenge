@@ -19,9 +19,11 @@ data Cmd =
     | Quit
     | Break Word16
     | Step
-    | DumpReg 
+    | DumpReg
+    | UserInReq
+    | UserIn String
     | SetR  Word16 Word16
-    deriving (Show)
+    deriving (Show, Eq)
 
 parseCmd :: String -> Maybe Cmd
 parseCmd "quit" = Just Quit
@@ -32,6 +34,7 @@ parseCmd "dumpreg" = Just DumpReg
 parseCmd xs = let
     ws = words xs
     in f ws where
+        f ["in", s] = Just $ UserIn s
         f ["break", n] = Just $ Break (read n ::Word16)
         f ["set", r, v] = Just $ SetR (read r :: Word16) (read v :: Word16)
         f _ = Nothing
@@ -41,6 +44,7 @@ parseCmd xs = let
     -- the main thread places the machine state into the MVar each pass
     -- the debugger grabs the mvar on pause & doesn't release untilgo is received
     --      memory can be rewritten during this time 
+
 
 startDebugger :: MVar Cmd -> IO ()
 startDebugger mvr = do
@@ -73,5 +77,6 @@ runDebugger (sock, _) mvr = do
                 hPutStrLn hdl "Received Quit Command"
             Just c -> do
                 _ <- takeMVar mvr
-                putMVar mvr c
+                putMVar mvr c       
                 loop
+

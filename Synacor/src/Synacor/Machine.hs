@@ -18,6 +18,7 @@ data CurrentState =
 
 data Output = 
     Term Word16 |
+    TermIn Word16 |
     Dbg Opcode [Word16] |
     Exit |
     Error String
@@ -26,6 +27,9 @@ maxAddress :: Word16
 maxAddress = 32767 :: Word16
 registerMax :: Word16
 registerMax = maxAddress + 8
+
+registers :: [Word16]
+registers = [(maxAddress + 1)..registerMax]
 
 isLiteral :: Word16 -> Bool
 isLiteral a = a > 0 && a < maxAddress 

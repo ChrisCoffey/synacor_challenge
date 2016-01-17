@@ -134,8 +134,11 @@ interpret machine@(CurrentState idx stk mem) = let
         --18
         f Ret = (if null stk then Just Exit else Nothing, CurrentState {inst = head stk, stack = tail stk, memory = mem })
         --19
-        f (Out c) =  (Just (Term c), CurrentState {inst = nextOp, stack = stk, memory = mem} )
+        f (Out c) = let
+            c' = readFrom c mem
+            in (Just (Term c'), CurrentState {inst = nextOp, stack = stk, memory = mem} )
         --20
+        f (In a) = (Just (TermIn a), CurrentState {inst = nextOp, stack = stk, memory = mem} )
         --21
         f NoOp = (Nothing, CurrentState {inst = nextOp, stack = stk, memory = mem} )
         --unknown
