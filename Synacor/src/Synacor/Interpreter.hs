@@ -24,7 +24,7 @@ readFrom i mem
 interpret :: CurrentState -> (Maybe Output, CurrentState)
 interpret machine@(CurrentState idx stk mem) = let
     memList = map snd . M.toList $ mem
-    (opcode, length) = parseOpcode . (drop (asInt idx)) $ memList
+    (opcode, length) = parseOpcode . (drop (asInt idx)) $ memList --ha, being lazy here
     nextOp = idx + (fromIntegral length)
     handle = f where
         --0

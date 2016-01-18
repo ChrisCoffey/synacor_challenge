@@ -14,7 +14,7 @@ your progress.  Good luck!
 - all math is modulo 32768; 32758 + 15 => 5
 
 == binary format ==
-- each number is stored as a 16-bit little-endian pair (low byte -> high byte)
+- each number is stored as a 16-bit little-endian pair (low byte, high byte)
 - numbers 0..32767 mean a literal value
 - numbers 32768..32775 instead mean registers 0..7
 - numbers 32776..65535 are invalid
@@ -27,7 +27,7 @@ your progress.  Good luck!
 
 == hints ==
 - Start with operations 0, 19, and 21.
-- Here's a code for the challenge website: VTMWIBnNuQWv
+- Here's a code for the challenge website: ausLTxQMOVNn
 - The program "9,32768,32769,4,19,32768" occupies six memory addresses and should:
   - Store into register 0 the sum of 4 and the value contained in register 1.
   - Output to the terminal the character with the ascii code contained in register 0.
