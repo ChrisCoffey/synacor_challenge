@@ -77,8 +77,6 @@ processInstructions machine mvar = f machine where
             clean (Just Exit) ns = die "all done" 
             clean (Just (TermIn addr)) ns = do
                 res <- getChar
-                print res
-                --let h = ord . head $ res
                 let input = CurrentState {
                         inst = inst ns,
                         stack = stack ns,
