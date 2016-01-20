@@ -43,6 +43,8 @@ handleDebug mvar (before, after) = do
                             return before
                 Step       -> do
                             putMVar mvar Step
+                            print "Inst"
+                            print . inst $ after
                             print "Registers" 
                             print . map (\i-> (memory after) M.! i) $ registers
                             print "Stack" 

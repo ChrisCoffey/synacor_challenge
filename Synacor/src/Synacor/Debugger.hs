@@ -36,13 +36,6 @@ parseCmd xs = let
         f ["set", r, v] = Just $ SetR (read r :: Word16) (read v :: Word16)
         f _ = Nothing
 
-    -- parse the input and update the mvar if necessary
-    -- mvar is used to make the main thread do debugger work
-    -- the main thread places the machine state into the MVar each pass
-    -- the debugger grabs the mvar on pause & doesn't release untilgo is received
-    --      memory can be rewritten during this time 
-
-
 startDebugger :: MVar Cmd -> IO ()
 startDebugger mvr = do
     sock <- socket AF_INET Stream 0
