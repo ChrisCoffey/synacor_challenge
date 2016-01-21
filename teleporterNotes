@@ -1,0 +1,16 @@
+5445 -> _
+Push                32768
+Push                32769
+Push                32770
+JumpFrom            32775 5605   <- Presumably this almost always hits
+
+
+5605 -> _
+Push                32768
+Push                32769
+Push                32770
+Set                 32768 29545
+Set                 32769 1531
+Add                 32770 2493 14658
+Call                1458
+

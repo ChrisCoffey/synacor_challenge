@@ -33,6 +33,7 @@ parseCmd "dumpreg" = Just DumpReg
 parseCmd xs = let
     ws = words xs
     in f ws where
+        f ["memdump", f] = Just $ MemDump f
         f ["break", n] = Just $ Break (read n ::Word16)
         f ["set", r, v] = Just $ SetR (read r :: Word16) (read v :: Word16)
         f _ = Nothing
