@@ -7,7 +7,9 @@ After making it through the [Advent of Code](http://adventofcode.com/)  it was t
  1. Install the [Haskell Stack] (http://docs.haskellstack.org/en/stable/README.html)
  1. Clone this repo
  1. Start the interpreter
+    
     ```bash
+    $> stack build
     $> stack exec Synacor-exe
     ```
  1. Connect the debugger from a different terminal window
