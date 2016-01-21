@@ -20,6 +20,7 @@ data Cmd =
     | Break Word16
     | Step
     | DumpReg
+    | MemDump String
     | SetR  Word16 Word16
     deriving (Show, Eq)
 

@@ -62,6 +62,10 @@ handleDebug mvar (before, after) = do
                 (Break i')  -> if i' == (inst before)
                                 then putMVar mvar Pause >> return before
                                 else putMVar mvar (Break i') >> return after
+                (MemDump f) -> do
+                             putMVar mvar Go
+                             writeFile f (show after)
+                             return after
                 Quit       -> do { die "Received quit command"}
     
 
