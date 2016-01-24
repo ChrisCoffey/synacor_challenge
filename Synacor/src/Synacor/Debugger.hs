@@ -5,11 +5,15 @@ import Control.Monad.Fix                    (fix)
 import Control.Concurrent
 import Control.Concurrent.MVar
 import Control.Exception
+import qualified Data.Map                   as M
 import Data.Word
 import Network.Socket
+
+import System.Exit                          (die)
 import System.IO
 
 import Synacor.Machine
+import Synacor.Interpreter                  (writeTo)
 
 data Vm = Vm { semaphor :: MVar CurrentState, machine :: CurrentState }
 type Msg = String
@@ -21,6 +25,7 @@ data Cmd =
     | Step
     | DumpReg
     | MemDump String
+    | LoadSave String
     | SetR  Word16 Word16
     deriving (Show, Eq)
 
@@ -34,6 +39,7 @@ parseCmd xs = let
     ws = words xs
     in f ws where
         f ["memdump", f] = Just $ MemDump f
+        f ["load", f] = Just $ LoadSave f
         f ["break", n] = Just $ Break (read n ::Word16)
         f ["set", r, v] = Just $ SetR (read r :: Word16) (read v :: Word16)
         f _ = Nothing
@@ -72,3 +78,44 @@ runDebugger (sock, _) mvr = do
                 putMVar mvr c       
                 loop
 
+handleDebug :: MVar Cmd -> (CurrentState, CurrentState) -> IO CurrentState
+handleDebug mvar (before, after) = do
+    c <- takeMVar mvar
+    case c of   Go        -> putMVar mvar c >> return after
+                Pause     -> do 
+                            putMVar mvar c
+                            print . map (\i-> (memory before) M.! i) $ registers
+                            threadDelay (10^6 * 3)
+                            return before
+                Step       -> do
+                            putMVar mvar Step
+                            print "Inst"
+                            print . inst $ after
+                            print "Registers" 
+                            print . map (\i-> (memory after) M.! i) $ registers
+                            print "Stack" 
+                            print . stack $ after
+                            threadDelay (10^6 * 5)
+                            return after
+                (SetR r v) -> do
+                            putMVar mvar Pause
+                            let tweaked = CurrentState {
+                                inst = inst before,
+                                stack = stack before,
+                                memory = writeTo r v (memory before)
+                            }
+                            return tweaked
+                (Break i')  -> if i' == (inst before)
+                                then putMVar mvar Pause >> return before
+                                else putMVar mvar (Break i') >> return after
+                (MemDump f) -> do
+                             putMVar mvar Go
+                             writeFile f (show after)
+                             return after
+                (LoadSave f) -> do
+                             putMVar mvar Go
+                             a <- readFile f
+                             let s = read a :: CurrentState
+                             return s
+                Quit       -> do { die "Received quit command"}
+    

@@ -1,3 +1,5 @@
+.gitignore
+tags
 *.swp
 *.orig
 *.hi

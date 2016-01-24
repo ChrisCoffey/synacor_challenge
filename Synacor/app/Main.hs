@@ -32,42 +32,6 @@ joinWords [] = mempty
 joinWords (w:ws) =
     (word16LE w) <> mconcat [word16LE w' | w' <- ws]
 
-handleDebug :: MVar Cmd -> (CurrentState, CurrentState) -> IO CurrentState
-handleDebug mvar (before, after) = do
-    c <- takeMVar mvar
-    case c of   Go        -> putMVar mvar c >> return after
-                Pause     -> do 
-                            putMVar mvar c
-                            print . map (\i-> (memory before) M.! i) $ registers
-                            threadDelay (10^6 * 3)
-                            return before
-                Step       -> do
-                            putMVar mvar Step
-                            print "Inst"
-                            print . inst $ after
-                            print "Registers" 
-                            print . map (\i-> (memory after) M.! i) $ registers
-                            print "Stack" 
-                            print . stack $ after
-                            threadDelay (10^6 * 5)
-                            return after
-                (SetR r v) -> do
-                            putMVar mvar Pause
-                            let tweaked = CurrentState {
-                                inst = inst before,
-                                stack = stack before,
-                                memory = writeTo r v (memory before)
-                            }
-                            return tweaked
-                (Break i')  -> if i' == (inst before)
-                                then putMVar mvar Pause >> return before
-                                else putMVar mvar (Break i') >> return after
-                (MemDump f) -> do
-                             putMVar mvar Go
-                             writeFile f (show after)
-                             return after
-                Quit       -> do { die "Received quit command"}
-    
 
 processInstructions :: CurrentState -> MVar Cmd -> IO CurrentState
 processInstructions machine mvar = f machine where

@@ -14,7 +14,7 @@ data CurrentState =
         stack :: MStack,
         memory :: Memory
     }
-    deriving (Show, Eq)
+    deriving (Show, Eq, Read)
 
 data Output = 
     Term Word16 |
