@@ -95,7 +95,7 @@ handleDebug mvar (before, after) = do
                             print . map (\i-> (memory after) M.! i) $ registers
                             print "Stack" 
                             print . stack $ after
-                            threadDelay (10^6 * 5)
+                            --threadDelay (10^6 * 5)
                             return after
                 (SetR r v) -> do
                             putMVar mvar Pause
